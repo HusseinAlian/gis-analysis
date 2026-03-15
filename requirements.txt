@@ -3,4 +3,5 @@ streamlit-folium
 geopandas
 folium
 pandas
+plotly
 mapclassify
