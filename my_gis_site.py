@@ -13,7 +13,7 @@ st.markdown("""
     .main { background-color: #f0f2f6; }
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
     </style>
-    """, unsafe_allow_stdio=True)
+    """, unsafe_allow_html=True)
 
 # 2. القائمة الجانبية (Sidebar)
 with st.sidebar:
