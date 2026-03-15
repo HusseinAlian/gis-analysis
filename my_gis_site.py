@@ -3,50 +3,65 @@ from streamlit_folium import st_folium
 import geopandas as gpd
 import folium
 import pandas as pd
-from folium.plugins import MeasureControl, Fullscreen
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="Regional GIS Portal", layout="wide")
+st.set_page_config(page_title="Hussein Alian | GIS Portfolio", layout="wide")
 
-# 2. القائمة الجانبية
+# 2. القائمة الجانبية للتنقل بين المشاريع
 with st.sidebar:
-    st.title("⚙️ الإعدادات")
-    basemap = st.selectbox("خريطة الأساس:", ["OpenStreetMap", "Esri Satellite"])
-    st.info("منصة التحليل المكاني وإدارة المخاطر الإقليمية")
+    st.title("📂 معرض مشاريع GIS")
+    # هنا بنضيف المشاريع المختلفة
+    project = st.radio(
+        "اختر المشروع لعرض التحليل:",
+        ["التحليل الإقليمي (المخاطر)", "مشروع GIS آخر (قريباً)", "قاعدة بيانات المواقع"]
+    )
+    st.markdown("---")
+    st.write("تم تطوير هذه المنصة بواسطة المهندس حسين عليان.")
 
-# 3. العناوين والمؤشرات
-st.title("🛡️ منظومة التحليل المكاني العابرة للحدود")
-col1, col2 = st.columns(2)
-col1.metric("نطاق الدراسة", "إقليمي (250 كم)")
-col2.metric("الحالة", "Operational")
-
-# 4. الخريطة
-try:
-    # محاولة تحميل الملفات
-    dimona = gpd.read_file("Dimona.geojson").to_crs(epsg=4326)
-    buffer_100 = gpd.read_file("Danger_Zone_100km.geojson").to_crs(epsg=4326)
-    buffer_250 = gpd.read_file("Danger_Zone_250km.geojson").to_crs(epsg=4326)
-
-    m = folium.Map(location=[30.5, 35.5], zoom_start=6, tiles=basemap)
+# ---------------------------------------------------------
+# المشروع الأول: تحليل المخاطر الإقليمية
+# ---------------------------------------------------------
+if project == "التحليل الإقليمي (المخاطر)":
+    st.title("🛡️ منظومة التحليل المكاني وإدارة المخاطر")
     
-    # إضافة الطبقات
-    folium.GeoJson(buffer_250, style_function=lambda x: {'fillColor': 'orange', 'color': 'orange', 'fillOpacity': 0.1}).add_to(m)
-    folium.GeoJson(buffer_100, style_function=lambda x: {'fillColor': 'red', 'color': 'red', 'fillOpacity': 0.3}).add_to(m)
-    folium.Marker([31.0006, 35.1444], popup="Center Point").add_to(m)
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        try:
+            # تحميل الملفات
+            b100 = gpd.read_file("Danger_Zone_100km.geojson").to_crs(epsg=4326)
+            b250 = gpd.read_file("Danger_Zone_250km.geojson").to_crs(epsg=4326)
 
-    m.add_child(MeasureControl(position='topright'))
-    m.add_child(Fullscreen())
-    st_folium(m, width="100%", height=500)
+            m = folium.Map(location=[30.5, 35.5], zoom_start=6)
+            folium.GeoJson(b250, style_function=lambda x: {'fillColor': 'orange', 'fillOpacity': 0.1}).add_to(m)
+            folium.GeoJson(b100, style_function=lambda x: {'fillColor': 'red', 'fillOpacity': 0.3}).add_to(m)
+            st_folium(m, width="100%", height=500)
+        except Exception as e:
+            st.warning("في انتظار ربط ملفات الخرائط...")
 
-except Exception as e:
-    st.error(f"⚠️ مشكلة في تحميل ملفات الـ GeoJSON: {e}")
+    with col2:
+        st.subheader("📊 ملخص النطاق")
+        st.write("تحليل تأثير عابر للحدود يشمل:")
+        st.success("- مصر (العريش)")
+        st.success("- الأردن (عمان)")
+        st.success("- السعودية (تبوك)")
 
-# 5. جدول البيانات
-st.markdown("---")
-st.subheader("📊 المواقع المرصودة في النطاق الإقليمي")
-regional_data = {
-    'الموقع': ['العريش (مصر)', 'تبوك (السعودية)', 'عمان (الأردن)', 'صور (لبنان)', 'القدس'],
-    'المسافة التقريبية (كم)': [135, 240, 110, 250, 75],
-    'الحالة الإقليمية': ['متأثر', 'على الحدود', 'متأثر', 'على الحدود', 'تأثير مباشر']
-}
-st.dataframe(pd.DataFrame(regional_data), use_container_width=True)
+# ---------------------------------------------------------
+# المشروع الثاني: مكان لإضافة شغل جديد
+# ---------------------------------------------------------
+elif project == "مشروع GIS آخر (قريباً)":
+    st.title("🏗️ مشروع قيد التنفيذ")
+    st.info("هذا القسم مخصص لإضافة تحليلاتك الجديدة (مثلاً: تحليل شبكات الطرق، أو توزيع الخدمات في الزقازيق).")
+    # هنا تقدر تحط كود خريطة تانية خالص ببيانات تانية
+    st.image("https://via.placeholder.com/800x400.png?text=New+GIS+Project+Placeholder")
+
+# ---------------------------------------------------------
+# المشروع الثالث: قاعدة البيانات
+# ---------------------------------------------------------
+else:
+    st.title("🗂️ قاعدة بيانات المواقع")
+    data = {
+        'الموقع': ['العريش', 'تبوك', 'عمان', 'صور', 'القدس'],
+        'الدولة': ['مصر', 'السعودية', 'الأردن', 'لبنان', 'فلسطين']
+    }
+    st.table(pd.DataFrame(data))
