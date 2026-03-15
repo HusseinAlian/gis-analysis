@@ -5,41 +5,36 @@ import folium
 import pandas as pd
 from folium.plugins import MeasureControl, Fullscreen
 
-# 1. إعدادات الصفحة والهوية
-st.set_page_config(page_title="Hussein Alian | GIS Strategic Portal", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="GIS Risk Analysis Portal", layout="wide")
 
-# CSS لتجميل الواجهة
+# تخصيص المظهر بـ CSS
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
-    .stMetric { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #007bff; }
-    .sidebar .sidebar-content { background-image: linear-gradient(#2e7bcf,#2e7bcf); color: white; }
+    .stMetric { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #2e7bcf; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. القائمة الجانبية (Sidebar) - هويتك الشخصية
+# 2. القائمة الجانبية (Sidebar) - نسخة محايدة
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/854/854878.png", width=80)
-    st.title("Hussein Alian")
-    st.write("📍 GIS Analyst | Ekc Company")
-    st.write("🎓 Master's Researcher")
+    st.title("GIS Strategy Portal")
+    st.write("نظام دعم القرار المكاني (Spatial Decision Support System)")
     st.markdown("---")
-    st.subheader("🔗 روابط هامة")
-    st.markdown("[Facebook: Location Allocation GIS](https://www.facebook.com)")
-    
-    st.subheader("🛠️ أدوات التحكم")
+    st.subheader("⚙️ إعدادات العرض")
     basemap = st.selectbox("خريطة الأساس:", ["OpenStreetMap", "Esri Satellite", "CartoDB dark_matter"])
-    show_labels = st.checkbox("عرض أسماء المدن", value=True)
+    show_data = st.checkbox("عرض نطاقات المحاكاة", value=True)
 
-# 3. لوحة البيانات (Dashboard Metrics)
+# 3. لوحة المؤشرات (Metrics)
 st.title("🛡️ منظومة التحليل المكاني وإدارة المخاطر")
-st.info("هذه المنصة صممت لعرض سيناريوهات المحاكاة المكانية للمناطق الخطرة باستخدام تقنيات Python GIS.")
+st.markdown("هذه المنصة صممت لعرض سيناريوهات المحاكاة المكانية للمناطق الخطرة باستخدام تقنيات **Python GIS**.")
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("المنطقة المستهدفة", "ديمونا")
-col2.metric("أقصى نصف قطر", "250 كم")
-col3.metric("عدد المدن الكبرى", "5 مدن")
-col4.metric("الحالة التقنية", "Active")
+col1.metric("نوع التحليل", "نطاقات الخطر")
+col2.metric("أقصى مدى", "250 كم")
+col3.metric("الدقة المكانية", "High")
+col4.metric("حالة النظام", "Operational")
 
 # 4. الخريطة التفاعلية
 try:
@@ -50,23 +45,14 @@ try:
 
     m = folium.Map(location=[31.0006, 35.1444], zoom_start=7, tiles=basemap)
     
-    # إضافة النطاقات بألوان متدرجة
-    folium.GeoJson(buffer_250, name="نطاق 250 كم", style_function=lambda x: {'fillColor': '#f1c40f', 'color': '#f39c12', 'fillOpacity': 0.2}).add_to(m)
-    folium.GeoJson(buffer_100, name="نطاق 100 كم", style_function=lambda x: {'fillColor': '#e74c3c', 'color': '#c0392b', 'fillOpacity': 0.4}).add_to(m)
+    if show_data:
+        folium.GeoJson(buffer_250, name="نطاق التأثير الثانوي", 
+                       style_function=lambda x: {'fillColor': '#f1c40f', 'color': 'orange', 'fillOpacity': 0.2}).add_to(m)
+        folium.GeoJson(buffer_100, name="نطاق التأثير الأولي", 
+                       style_function=lambda x: {'fillColor': '#e74c3c', 'color': 'red', 'fillOpacity': 0.4}).add_to(m)
 
-    # إضافة ماركر للمفاعل
-    folium.Marker([31.0006, 35.1444], popup="Dimona Reactor", icon=folium.Icon(color='black', icon='warning', prefix='fa')).add_to(m)
-
-    # إضافة ماركرز للمدن المتأثرة (Data من تحليلنا السابق)
-    cities = {
-        "عمان": [31.95197, 35.93135],
-        "القدس": [31.77841, 35.20663],
-        "تل أبيب": [32.08194, 34.76807]
-    }
-    for city, coords in cities.items():
-        if show_labels:
-            folium.Marker(location=coords, icon=folium.DivIcon(html=f'<div style="font-size: 10pt; color: blue; font-weight: bold;">{city}</div>')).add_to(m)
-        folium.CircleMarker(location=coords, radius=4, color='blue', fill=True).add_to(m)
+    folium.Marker([31.0006, 35.1444], popup="مركز الدراسة", 
+                  icon=folium.Icon(color='black', icon='crosshairs', prefix='fa')).add_to(m)
 
     m.add_child(MeasureControl(position='topright'))
     m.add_child(Fullscreen())
@@ -74,25 +60,22 @@ try:
     st_folium(m, width="100%", height=600)
 
 except Exception as e:
-    st.error(f"خطأ في تحميل البيانات: {e}")
+    st.warning(f"في انتظار تحميل ملفات الـ GeoJSON للمحاكاة...")
 
-# 5. التقرير الإحصائي
+# 5. التقارير الفنية
 st.markdown("---")
-t1, t2 = st.tabs(["📊 تقرير المدن المتضررة", "ℹ️ تفاصيل المشروع"])
+t1, t2 = st.tabs(["📊 البيانات التحليلية", "📖 حول النظام"])
 
 with t1:
+    st.subheader("جدول المواقع المتأثرة")
+    # بيانات عامة للنموذج
     data = {
-        'المدينة': ['عمان', 'القدس', 'تل أبيب', 'بئر السبع', 'الخليل'],
-        'الدولة': ['الأردن', 'فلسطين', 'فلسطين', 'فلسطين', 'فلسطين'],
-        'المسافة (كم)': [115, 75, 95, 25, 55],
-        'تصنيف الخطر': ['متوسط', 'عالي', 'عالي', 'حرج', 'عالي']
+        'الموقع المرجعي': ['Location A', 'Location B', 'Location C', 'Location D'],
+        'المسافة المركزية (كم)': [25, 75, 115, 150],
+        'تصنيف النطاق': ['حرج', 'عالي', 'متوسط', 'منخفض']
     }
     df = pd.DataFrame(data)
     st.dataframe(df, use_container_width=True)
-    
-    csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 تحميل التقرير (CSV)", data=csv, file_name='gis_report.csv', mime='text/csv')
 
 with t2:
-    st.write("هذا المشروع هو جزء من تحليل مكاني لرسالة الماجستير الخاصة بالمهندس حسين عليان.")
-    st.write("تم استخدام مكتبات: Streamlit, Leaflet (Folium), GeoPandas.")
+    st.info("تعتمد هذه المحاكاة على خوارزميات الـ Buffering و Spatial Join المتطورة لتقدير مستويات التعرض المكاني.")
