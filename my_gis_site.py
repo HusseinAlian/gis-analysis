@@ -9,7 +9,7 @@ from folium.plugins import MeasureControl, Fullscreen, Draw
 # --- 1. إعدادات الهوية الفنية ---
 st.set_page_config(page_title="GIS Intelligence Portal", layout="wide", initial_sidebar_state="expanded")
 
-# تصميم الواجهة الاحترافي
+# تصميم الواجهة الاحترافي (Dark Premium)
 st.markdown("""
     <style>
     .main { background-color: #0d1117; color: #c9d1d9; }
@@ -32,8 +32,61 @@ def load_comprehensive_data():
 
 df = load_comprehensive_data()
 
-# --- 3. القائمة الجانبية ---
+# --- 3. القائمة الجانبية (تصحيح السطر 39) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2312/2312217.png", width=70)
     st.title("GIS Intelligence Center")
-    app_mode = st.selectbox("وحدة النظام:", ["لوحة التحكم المركزية", "محاكي السيناريوهات", "إدارة البيانات
+    # السطر المصحح أدناه: تأكد من وجود علامة التنصيص في الآخر
+    app_mode = st.selectbox("وحدة النظام:", ["لوحة التحكم المركزية", "محاكي السيناريوهات", "إدارة البيانات"])
+    distance_threshold = st.slider("تحديد نطاق التأثير (كم):", 0, 300, 250)
+    st.markdown("---")
+    st.info("نظام دعم القرار المكاني المطور - 2026")
+
+# --- 4. منطق عرض الصفحات ---
+if app_mode == "لوحة التحكم المركزية":
+    st.title("🛡️ منظومة المراقبة والتحليل الإقليمي")
+    filtered_df = df[df['المسافة (كم)'] <= distance_threshold]
+    
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("المواقع في النطاق", len(filtered_df))
+    m2.metric("إجمالي السكان", f"{filtered_df['السكان'].sum():,}")
+    m3.metric("أقصى مسافة رصد", f"{filtered_df['المسافة (كم)'].max()} كم")
+    m4.metric("حالة الربط", "Online")
+
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        st.subheader("🌐 الخريطة التحليلية التفاعلية")
+        try:
+            m = folium.Map(location=[30.8, 34.8], zoom_start=6, tiles="CartoDB dark_matter")
+            try:
+                # تصحيح السطر 70: التأكد من قفل الأقواس وعلامات التنصيص
+                b100 = gpd.read_file("Danger_Zone_100km.geojson").to_crs(epsg=4326)
+                b250 = gpd.read_file("Danger_Zone_250km.geojson").to_crs(epsg=4326)
+                folium.GeoJson(b250, name="Zone 250km", style_function=lambda x: {'fillColor': '#f39c12', 'fillOpacity': 0.1, 'color': 'orange'}).add_to(m)
+                folium.GeoJson(b100, name="Zone 100km", style_function=lambda x: {'fillColor': '#e74c3c', 'fillOpacity': 0.3, 'color': 'red'}).add_to(m)
+            except:
+                st.warning("ارفع ملفات .geojson لتفعيل الطبقات التحليلية.")
+            
+            Draw(export=True).add_to(m)
+            MeasureControl(position='topright').add_to(m)
+            Fullscreen().add_to(m)
+            st_folium(m, width="100%", height=550)
+        except Exception as e:
+            st.error(f"خطأ في بناء الخريطة: {e}")
+
+    with c2:
+        st.subheader("📊 تحليل المسافة vs السكان")
+        fig = px.scatter(filtered_df, x="المسافة (كم)", y="السكان", size="السكان", color="الدولة", template="plotly_dark")
+        st.plotly_chart(fig, use_container_width=True)
+
+elif app_mode == "محاكي السيناريوهات":
+    st.title("🧪 محاكي سيناريوهات الاستجابة")
+    risk_factor = st.select_slider("مستوى الخطورة:", options=[0.1, 0.3, 0.5, 0.8, 1.0])
+    df['الخطر المقدر'] = (df['السكان'] * risk_factor).astype(int)
+    fig_radar = px.line_polar(df, r='الأهمية', theta='الموقع', line_close=True, template="plotly_dark")
+    fig_radar.update_traces(fill='toself')
+    st.plotly_chart(fig_radar, use_container_width=True)
+
+else:
+    st.title("📂 إدارة البيانات")
+    st.download_button("📥 تحميل التقرير (CSV)", data=df.to_csv(index=False).encode('utf-8'), file_name='palestine_gis_report.csv')
