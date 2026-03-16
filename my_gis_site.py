@@ -6,10 +6,10 @@ import pandas as pd
 import plotly.express as px
 from folium.plugins import MeasureControl, Fullscreen, Draw
 
-# --- 1. إعدادات الهوية الفنية (بدون بيانات شخصية) ---
+# --- 1. إعدادات الهوية الفنية ---
 st.set_page_config(page_title="GIS Intelligence Portal", layout="wide", initial_sidebar_state="expanded")
 
-# تصميم الواجهة الاحترافي (Dark Premium)
+# تصميم الواجهة الاحترافي
 st.markdown("""
     <style>
     .main { background-color: #0d1117; color: #c9d1d9; }
@@ -19,7 +19,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك البيانات (فلسطين بدلاً من إسرائيل) ---
+# --- 2. محرك البيانات (فلسطين) ---
 @st.cache_data
 def load_comprehensive_data():
     return pd.DataFrame({
@@ -36,35 +36,4 @@ df = load_comprehensive_data()
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2312/2312217.png", width=70)
     st.title("GIS Intelligence Center")
-    st.markdown("---")
-    
-    app_mode = st.selectbox("وحدة النظام:", ["لوحة التحكم المركزية", "محاكي السيناريوهات", "إدارة البيانات"])
-    distance_threshold = st.slider("تحديد نطاق التأثير (كم):", 0, 300, 250)
-    
-    st.markdown("---")
-    st.info("نظام دعم القرار المكاني المطور - إصدار 2026")
-
-# --- 4. منطق عرض الصفحات ---
-if app_mode == "لوحة التحكم المركزية":
-    st.title("🛡️ منظومة المراقبة والتحليل الإقليمي")
-    
-    # تصفية البيانات حياً بناءً على السلايدر
-    filtered_df = df[df['المسافة (كم)'] <= distance_threshold]
-    
-    # تصحيح الـ NameError بتعريف المتغيرات بشكل سليم
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("المواقع في النطاق", len(filtered_df))
-    m2.metric("إجمالي السكان المتأثرين", f"{filtered_df['السكان'].sum():,}")
-    m3.metric("أقصى مسافة رصد", f"{filtered_df['المسافة (كم)'].max()} كم")
-    m4.metric("حالة الربط", "Online")
-
-    c1, c2 = st.columns([2, 1])
-
-    with c1:
-        st.subheader("🌐 الخريطة التحليلية التفاعلية")
-        try:
-            m = folium.Map(location=[30.8, 34.8], zoom_start=6, tiles="CartoDB dark_matter")
-            
-            # تحميل ملفات الـ GeoJSON (تأكد من وجودها على GitHub بنفس الأسماء)
-            try:
-                b100 = gpd.read_file("Danger_Zone_100km.geojson").to_crs(eps
+    app_mode = st.selectbox("وحدة النظام:", ["لوحة التحكم المركزية", "محاكي السيناريوهات", "إدارة البيانات
